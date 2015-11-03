@@ -1,4 +1,4 @@
-var app = angular.module('directivePractice', ['ui.route']);
+var app = angular.module('directivePractice', ['ui.router']);
 
 app.config(function(){
 
