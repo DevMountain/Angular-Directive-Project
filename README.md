@@ -38,7 +38,7 @@ app.directive('dirDisplay', function(){
 });
 ```
 
-What we're returning is the directive object. You won't see anymore code in this tutorial so it's important you get things working right and refer back to what you've already done to advance from now on.
+What we're returning is the directive object. 
 
 ## Step 2. Advancing directives
 Your directive should be loaded up now, but it's not really doing much. Let's make it better.
@@ -185,93 +185,90 @@ This means that whatever comes into the `currentUser` attribute is going to be a
 
 The `'='` value on your `scope` object has created a two-way binding between `users[0]` and `currentUser`. Now let's try out the `'&'`.
 - On your `home` controller add a function called `getWeather`. It takes one parameter called `city`.
-- This function will make a call to a service so we'll need to create that.
+- This function will make a call to a service called `weatherService`.
 - Make a weather service. Name it something cool and creative like `weatherService`.
-- Inside the weather service make a function called `getWeather` that also takes one parameter, `city`.
+- Inside the weather service make a function called `get` that also takes one parameter, `city`.
 - Make an `$http` get to this url - `'http://api.openweathermap.org/data/2.5/weather?q='`
 - - Note: You will need to make an account and include your API key for this to work. See : [http://openweathermap.org/appid#use](http://openweathermap.org/appid#use)
 - After the `q=` add on the `city` parameter.
   - If you want you can test this out in postman. See what kind of data you get back. If it's the weather of that city then... you win!
-- Use `$q` to return a promise that only resolves with the data you want. Temperature (preferably not in Kelvin) and the weather description. Use `console.log` on the data coming from the `$http` request to get to what you want. You'll need to add both on an object that you resolve your new promise with.
-- On your `home` controller have it return the result of invoking the get `getWeather` function on the service. *You should be returning a promise.*
-- Now in your `home` route's HTML pass in the getWeather function to the `dirWeather` directive through an attribute called `weather-call`.
-- Add the attribute to your isolate scope object.
+- Use `$q` to return a promise that only resolves with the data you want:
+     - Temperature (preferably not in Kelvin)
+     - the weather description. 
+- Use `console.log` on the data coming from the `$http` request to find the property names for the data we want. You'll need to create a new object with new proprties to hold this data before resolving the promise.
+- On your `home` controller have it return the result of invoking `weatherService.get`. *You should be returning a promise.*
+- Now in your `home` route's HTML template find your `dirWeather` directive and add an attribute called `weather-call`.  Give this attribute a value of `getWeather`.  This is referring to the `getWeather` function on our home controller.
+- Go to your dirWeather directive file and add that `weather-call` variable name as a key on your isolate scope object.
 
-That was a lot of linking, but let's walk through it. Your controller has a function linked to the service, which is in turn linked to your directive. So if you run the `weatherCall` function in your directive it will go through your controller to your service and then back.
+That was a lot of linking, but let's walk through it. Your controller has a function which is calling a service.
+Your html is linking that function to your directive through the `weather-call` attribute in the html. So if you run the `weatherCall` function in your directive it will go through your controller to your service and then back.
 
-Now things get a little bit tricky. Angular's way of passing along arguments through a directive to your controller are tricky, but once you understand how
-to do it, it's not hard.
+Now things get a little bit tricky. Angular's way of passing along arguments through a directive to your controller are tricky, but once you understand how to do it, it's not hard.
 I'm going to give an example here of how it works.
 
 ```html
-<my-directive pass-func="callFunc(data)"></my-directive>
+<weather-dir weather-call="getWeather(city)"></my-directive>
 ```
 
-Here's how it would look in your HTML. But where's the `data` supposed to be coming from? It seems that you'd rather be able to pass in data from your directive.
-Well you still can, you just have to essentially tell angular what do use as an argument to replace `data` when it calls that function in your controller.
-The actualy function call inside the directive will look like this.
+Here's how it would look in your HTML. But where's the `city` supposed to be coming from?
+Since we're giving the function to our directive we want our directive to pass in the city.  To do this you have to tell angular what to use as an argument to replace `city` when it calls that function.
+The actual function call inside the directive will look like this.
 ```javascript
-$scope.passFunc({data: wantedData})
+scope.weatherCall({city: wantedData})
 ```
 
 So what you'll do is pass in an object where the property name is what the argument is named in the HTML where you call the directive.
-That might sound confusing, but just look at the two code blocks above for a pattern. Note that `pass-func` becomes `$scope.passFunc` and `data` is being
-replaced with `wantedData` with the `{data: wantedData}` object.
+Look at the two code blocks above for a pattern. 
+- weatherCall is the name of property on your isolate scope in the directive
+- getWeather is the name of the function on your controller
+- the city reference in the html is the same as the data key on the object we're creating, when we invoke our function in our directive
 In our directive we want to replace `city` in the attribute call, for something else inside the directive. You'll follow the same pattern as above.
 
 For now let's get things set up for that function call.
 - Add to the `dirWeather` directive object a property called `controller`.
 - It's value will be a function.
 
-Yes, this is a controller specifically for your one directive. It works the same as any other controller, except you don't give it a name.
+This is a controller specifically for your one directive. It works the same as any other controller, except you don't give it a name.
 It's `$scope` object will only be accessible within an instance of your directive. Don't forget to inject `$scope` in the function.
 
-- Inside your controller function run the `weatherCall` function with the `city` property from the `currentUser` on your `$scope`.
- - Here's where you need to make sure you've passed in a `city` argument in the attribute function call, and then replace that with your `currentUser`'s city
- using an object with a `city` property.
-- The function call should return a promise, so call `.then` afterward and add the data onto your `$scope` to display both the weather and temperature of 
-the `currentUser`'s city. The properties can be named whatever makes sense to you.
+- Inside your controller function invoke the `weatherCall` function with the `city` property from the `currentUser` on your `$scope`.
+ - You need to make sure you've passed in an object with a `city` property as an argument in the function call, and then replace that with your `currentUser`'s city using an object with a `city` property.
+- The function call should return a promise, so call `.then` afterward and add the data onto the directive controller's `$scope`. The properties can be named whatever makes sense to you.
+- You will then need to add a reference to that data in your template file so the data is displayed.
  - You may also want to find a way to get rid of all the decimal places on your temperature.
  
  Now you should have everything hooked up so it shows Geoff's data and the weather data for Provo. But is that good enough?
  
-##Step 6. Ramping up our ramp up.
+##Step 6. Ramping up
  Now let's change this so it shows the weather data for whichever user we select. We're going to need to use `'&'` again.
- - Make a function on the `home` controller that takes in a parameter and sets a property on the `$scope` to be that parameter. Maybe you see where this is going.
+ - Make a function on the `home` controller that takes in a parameter representing a selected user and sets a property on the `$scope` to be that parameter.
  
  We want to get this function into our `dirDisplay` controller. But in order to do that we need to isolate `dirDisplay`'s scope. 
+- Add an isolate scope object on to your dirDisplay
  This also means we need to pass in each individual user through the `scope` object as well.
- - To make it easier on ourselves, let's pass the current user from our `ng-repeat` into our directive through a `user` attribute. This way we can leave
- our two-way bindings as they are.
+ - Pass the current user from our `ng-repeat` into our directive through a `user` attribute. 
+ - You will need to add user to your isolate scope
+ - You will also need to add the user attribute in the html and pass in the selectedUser property 
  - Also pass our new function that sets our current user from our `home` controller into our directive through a `setUser` attribute.
-  - You'll need to add an argument in there again. Go with `user`.
+  - You'll also need to add a property to hold the function to your isolate socpe
+  - You'll need to add an argument in that function, in the html, again.
  
  Your scope object in `dirDisplay` should have two properties. `setUser` with the value of `'&'` and `user` with the value of `'='`.
- As before we're going to need to do some tricky stuff to get our argument back to our controller.
- - Call the `setUser` function inside our click event listener and pass in an object the sets our `user` argument to be the user on
- our directive's `scope` object. If you've forgotten this part go back up and take a look at how you did it before or the example in this README.
+ We're going to need to do some work to get our argument back to our controller.
+ - Call the `setUser` function inside our click event listener and pass in an object the sets our `user` argument to be the user on our directive's `scope` object. If you've forgotten this part go back up and take a look at how you did it before or the example in this README.
  
  Whatever user you click on now should show up in the `dirWeather` directive as the current user. But we're missing one thing, we want to be able to see
- the weather for that user too. We'll have to do one more thing that will seem a little bit tricky at first, but it's good to learn if you don't know it already
- since it's actually used quite frequently.
+ the weather for that user too. We'll have to do one more thing that's a good exercise.
  
  We need to step up a change listener on our `currentUser` in the `dirWeather` directive. We'll use angular's `$watch` functionality. `$watch` is a method on
- your `$scope` that will watch for changes in a variable you give it. It works in two ways.
+ your `$scope` that will watch for changes in a variable you give it. It works like this.
  ```javascript
- $scope.$watch('property', function(value){
+ $scope.$watch('propertyToWatch', function(value){
    console.log("When $scope.property changes its new value is: ", value)
  });
  ```
- And
- ```javascript
- $scope.$watch(function(){
-   return myVar
- }, function(value){
-   console.log("When myVar changes its new value is: ", value);
- });
- ```
  - Remove the immediate function call that we have in there now. Maybe just comment it out for now because we'll use it in a bit.
- - Now call the `$watch` method on your scope and have it watch currentUser. Either way of using `$watch` is fine.
+ - Now call the `$watch` method on your scope and have it watch currentUser.
  - Have its callback run the `$scope.weatherCall` function just like you had it before.
  
  *One thing to note is that `$scope.$watch` will always run once to begin with. Since that's what we want here it's great, but just be aware of that.*
