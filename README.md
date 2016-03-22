@@ -285,3 +285,7 @@ It's `$scope` object will only be accessible within an instance of your directiv
  3. A color change for the currently active user would be nicer than showing that user's info inside the dirWeather modal. Or at least less redundant.
  4. Whatever else you want. We still haven't explored `transclusion` and `ng-transclude` so give that a try if you're feeling adventurous. Just know that
  it's a way for deciding where to put the HTML child elements of a directive. It's cool stuff that can involve some criss-crossing of scopes.
+
+## Copyright
+
+© DevMountain LLC, 2016. Unauthorized use and/or duplication of this material without express and written permission from DevMountain, LLC is strictly prohibited. Excerpts and links may be used, provided that full and clear credit is given to DevMountain with appropriate and specific direction to the original content.
